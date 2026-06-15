@@ -282,3 +282,13 @@ docker images hello-world:latest
 ```
 
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/6c822167-6a06-4c01-8e2b-18776dfad327" />
+
+## Lab - Find more details about a container
+```
+docker ps
+docker inspect c1-jegan
+docker inspect -f {{.NetworkSettings.Networks.bridge.IPAddress}} c1-jegan
+docker inspect c1-jegan | grep IPA
+```
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/9d1999bf-6ad3-4fa4-ac5a-8b958cb19e1f" />
+
