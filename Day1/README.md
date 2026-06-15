@@ -304,4 +304,96 @@ Lets's create a loadbalancer container with port forward to expose this containe
 docker run -d --name lb-jegan --hostname lb-jegan -p 8080:80 nginx:latest
 ```
 
+List and check all your containers
+```
+docker ps | grep jegan
+```
+
+Copy the nginx.conf from lb container to your local machine
+```
+docker cp lb-jegan:/etc/nginx/nginx.conf .
+cat nginx.conf
+```
+
+Find the IP addresses of your web server containers
+```
+docker inspect webserver1-jegan | grep IPA
+docker inspect webserver2-jegan | grep IPA
+docker inspect webserver3-jegan | grep IPA
+```
+
+Update the nginx.conf file as shown below with your webserver1-jegan, webserver2-jegan and webserver3-jegan
+<pre>
+
+user  nginx;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log notice;
+pid        /run/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    upstream myapp1 {
+        server 172.17.0.5:80;
+        server 172.17.0.6:80;
+        server 172.17.0.7:80;
+    }
+
+    server {
+        listen 80;
+
+        location / {
+            proxy_pass http://myapp1;
+        }
+    }
+}
+</pre>
+
+Copy the configured nginx.conf file back into the lb container
+```
+docker cp nginx.conf lb-jegan:/etc/nginx/nginx.conf
+```
+
+To apply config changes done to load balancer container, restart that container
+```
+docker restart lb-jegan
+docker ps
+```
+
+To customize the html responses from each webserver
+```
+echo "<h1>Web server 1</h1>" > index.html
+docker cp index.html webserver1-jegan:/usr/share/nginx/html/index.html
+
+echo "<h1>Web server 2</h1>" > index.html
+docker cp index.html webserver2-jegan:/usr/share/nginx/html/index.html
+
+echo "<h1>Web server 3</h1>" > index.html
+docker cp index.html webserver3-jegan:/usr/share/nginx/html/index.html
+```
+
+Check if the respective webserver are responding with the customized output
+```
+curl http://172.17.0.5:80
+curl http://172.17.0.6:80
+curl http://172.17.0.7:80
+```
+
+Finally check the load balancer response from your lab machine web browser
+```
+localhost:8080
+```
+
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/faf8957b-4310-4b75-b55b-87365515ec7b" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/ca57591e-867f-40b8-82e1-5579a3dd58fb" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/055d8b21-2553-4db5-8a6b-9d63806b1c8d" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/04a3b20e-7b33-4545-9f7b-d3add7eadaa9" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/8d729602-0ddd-4fab-a93f-a0d29e4c0d93" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/dc7d7d70-5f86-4e4e-95ef-603f768c367a" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/f4d77385-5bf5-4da8-843c-12e1f063061c" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/029062c0-a242-44d5-9f82-c566d59d30f0" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/449a94a5-be11-47ca-8f9b-80f7ec57cdf5" />
