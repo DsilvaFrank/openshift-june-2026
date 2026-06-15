@@ -143,3 +143,35 @@ ubuntu:latest - is the docker image name from your local docker registry
 /bin/bash - is the terminal that will be started inside the container
 when you exit from a container that is interactively created, it end up stopping the container
 </pre>
+
+## Lab - Creating a container without custom name or hostname
+```
+# Create new container and start it in interactive mode
+docker run -it ubuntu:latest /bin/bash
+
+# Find its hostname assigned by docker server
+hostname
+
+# Finds its ip address
+hostname -i
+
+# Come out of the container shell, this will also end up terminating the container
+exit
+```
+
+List only running containers
+```
+docker ps 
+```
+
+List all containers
+```
+docker ps -a
+```
+
+Starting a exited container
+```
+docker start unruffled_leakey
+docker ps
+```
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/43dd5404-5434-49ae-ab24-2406014c5b06" />
