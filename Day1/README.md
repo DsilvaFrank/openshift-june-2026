@@ -255,7 +255,7 @@ cd ~/CustomDockerImage
 touch Dockerfile
 docker build -t jegan/ubuntu:1.0 .
 docker images | grep jegan
-``
+```
 
 Create a container using your custom docker image
 ```
@@ -269,5 +269,6 @@ javac -version
 java -version
 exit
 ```
+
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/4acd2998-2c77-4327-b0c7-5f23a297b019" />
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/91f54603-5fc0-4519-9d8a-e9cb05470739" />
