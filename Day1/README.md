@@ -173,8 +173,16 @@ Starting a exited container
 ```
 docker start unruffled_leakey
 docker ps
+
+docker exec -it unruffled_leaky /bin/bash
+hostname
+hostname -i
+ls
+exit
+docker ps
 ```
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/43dd5404-5434-49ae-ab24-2406014c5b06" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/943cae01-2588-496e-be21-98c661f20f1a" />
 
 ## Lab - Deleting a running container
 
