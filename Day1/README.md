@@ -130,4 +130,15 @@ docker run -it --name ubuntu1-jegan --hostname ubuntu1-jegan ubuntu:latest /bin/
 hostname
 hostname -i
 ls -l
+exit
 ```
+
+Note
+<pre>
+docker - is the client tool
+run - will create a new container and start it
+ubuntu1-jegan - is the name of the container and it must be unique
+ubuntu1-jegan - is the hostname of the container
+ubuntu:latest - is the docker image name from your local docker registry
+/bin/bash - is the terminal that will be started inside the container
+</pre>
