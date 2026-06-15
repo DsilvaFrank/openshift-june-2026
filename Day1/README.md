@@ -122,3 +122,12 @@ docker --version
 ```
 docker images
 ```
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/583ccf04-1a42-405c-ade3-97d03730b088" />
+
+## Lab - Create a container in interactive mode
+```
+docker run -it --name ubuntu1-jegan --hostname ubuntu1-jegan ubuntu:latest /bin/bash
+hostname
+hostname -i
+ls -l
+```
