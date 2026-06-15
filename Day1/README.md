@@ -69,3 +69,19 @@
     - cRun
     - CRI-O
 </pre>
+
+## Info - Docker Overview
+<pre>
+- is developed in Golang by a company called Docker Inc
+- Docker follows Client/Server Architecture
+- Docker Application Container Engine ( Server )
+  - dockerd
+- Docker Client
+  - docker
+- The docker client/server they communicate with each other if installed on the same machine
+  using local unix socket
+- In case docker client runs on separate machine and server runs on another machine, they communicate using REST API
+- in order to manage docker images or docker containers, we as end-users will be issuing command using the docker client
+- in order to issue docker commands, one must be part of an user group called docker
+- those users who are part of docker user group, they only gain read/write access to the unix socket that is usef by docker client & server
+</pre>
