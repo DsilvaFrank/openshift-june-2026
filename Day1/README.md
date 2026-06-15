@@ -292,3 +292,16 @@ docker inspect c1-jegan | grep IPA
 ```
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/9d1999bf-6ad3-4fa4-ac5a-8b958cb19e1f" />
 
+## Lab - Setting up a load-balancer manually using docker containers
+Let's create 3 webserver containers
+```
+docker run -d --name webserver1-jegan --hostname webserver1-jegan nginx:latest
+docker run -d --name webserver2-jegan --hostname webserver2-jegan nginx:latest
+docker run -d --name webserver3-jegan --hostname webserver3-jegan nginx:latest
+```
+Lets's create a loadbalancer container with port forward to expose this container for external access
+```
+docker run -d --name lb-jegan --hostname lb-jegan -p 8080:80 nginx:latest
+```
+
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/faf8957b-4310-4b75-b55b-87365515ec7b" />
