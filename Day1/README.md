@@ -237,3 +237,37 @@ docker ps
 ```
 
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/bc05e678-b047-4dc6-8c60-c0939b10fdeb" />
+
+## Lab - Creating a custom docker image
+Create a sub-folder under your home directory
+
+Create a file named Dockerfile, place this file in a sub-folder
+<pre>
+FROM ubuntu:latest
+
+RUN apt update && apt install -y vim tree default-jdk iputils-ping net-tools
+</pre>
+
+Build your custom docker image
+```
+mkdir ~/CustomDockerImage
+cd ~/CustomDockerImage
+touch Dockerfile
+docker build -t jegan/ubuntu:1.0 .
+docker images | grep jegan
+``
+
+Create a container using your custom docker image
+```
+docker run -dit --name c1-jegan --hostname c1-jegan jegan/ubuntu:1.0 /bin/bash
+docker ps
+docker exec -it c1-jegan /bin/bash
+ifconfig
+tree
+vim
+javac -version
+java -version
+exit
+```
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/4acd2998-2c77-4327-b0c7-5f23a297b019" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/91f54603-5fc0-4519-9d8a-e9cb05470739" />
