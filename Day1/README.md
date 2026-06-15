@@ -141,4 +141,5 @@ ubuntu1-jegan - is the name of the container and it must be unique
 ubuntu1-jegan - is the hostname of the container
 ubuntu:latest - is the docker image name from your local docker registry
 /bin/bash - is the terminal that will be started inside the container
+when you exit from a container that is interactively created, it end up stopping the container
 </pre>
