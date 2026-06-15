@@ -1,4 +1,4 @@
-<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/e0f84258-c130-46e1-8c41-e3b32ad51f00" /># Day 1
+# Day 1
 
 ## Info - Hypervisor Overview
 <pre>
