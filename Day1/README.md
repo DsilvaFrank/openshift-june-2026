@@ -85,3 +85,19 @@
 - in order to issue docker commands, one must be part of an user group called docker
 - those users who are part of docker user group, they only gain read/write access to the unix socket that is usef by docker client & server
 </pre>
+
+## Info - Docker Image
+<pre>
+- is a blueprint of a container
+- Image => An application + with all its dependencies
+- it is a JSON file which refers to multiple docker image layers
+- in other words, image is further broken down into many image layers
+- just like every image has an unique name and id, image layers also has their own unique ID
+- the unique ids are 256 bit HASH
+- the image layers can be shared by multiple docker images
+</pre>
+
+## Info - Docker Container
+<pre>
+  
+</pre>
