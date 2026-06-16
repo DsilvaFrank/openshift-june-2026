@@ -259,5 +259,6 @@ Note
 <pre>
 - Repairing stateless applications are relatively easy compared to stateful applications
 - each Pod in a Deployment is dependent of other Pods
-- In case a Pod is found defective in a Deployment, it can be easily replaced with another new Pod on the same node or on another node
+- In case, a Pod is found defective in a Deployment, it can be easily replaced with another new Pod on the same node or on another node
+  by the respective Controller
 </pre>
