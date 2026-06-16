@@ -122,3 +122,14 @@ kubectl get nodes
 ```
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/de0b33c6-4f77-4ef4-b967-5d2bee04a694" />
 
+## Info - Stateless applications
+<pre>
+- each call to a Pod will be treated as an independent invocation
+- the Pod will have no clue which user called last time, it only know about the current session
+- this kind of Pods can be replaced and repaired easily
+- because for the end user it doesn't matter whether Pod1 is server them or Pod10 is serving them
+- for this type of applications, you have something called Deployment in Kubernetes and OpenShift
+- Deployment is a in-built Resource supported by Kubernetes and Openshift
+</pre>
+
+## Info - Deployment Controller
