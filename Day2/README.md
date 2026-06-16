@@ -173,6 +173,7 @@ Create a openshift project
 ```
 oc new-project jegan
 ```
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/725632fa-54d4-41f7-88e6-6d4b749acd3b" />
 
 Listing all the projects
 ```
