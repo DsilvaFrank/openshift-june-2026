@@ -180,6 +180,7 @@ Listing all the projects
 oc get projects
 oc get project
 ```
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/c068226f-0700-442e-9410-79c60f96790e" />
 
 Switching between projects
 ```
@@ -191,6 +192,8 @@ Finding the currently active project
 ```
 oc project
 ```
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/46750e69-2407-402c-a4d3-bddd6f99fc37" />
+
 
 Deleting a project that you created
 ```
