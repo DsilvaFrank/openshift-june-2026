@@ -253,3 +253,11 @@ oc delete deploy/nginx
 ```
 
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/a11d0d86-eab1-4da0-8da2-3194966f5ca0" />
+
+
+Note
+<pre>
+- Repairing stateless applications are relatively easy compared to stateful applications
+- each Pod in a Deployment is dependent of other Pods
+- In case a Pod is found defective in a Deployment, it can be easily replaced with another new Pod on the same node or on another node
+</pre>
