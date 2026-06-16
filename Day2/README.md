@@ -214,10 +214,10 @@ oc get is | grep nginx
 ```
 oc project jegan
 
-# Server 1
+# Server 1 (192.168.10.200)
 oc create deploy nginx --image=image-registry.openshift-image-registry.svc:5000/openshift/nginx:1.26 --replicas=3
 
-# Server 2
+# Server 2 (192.168.10.201)
 oc create deploy nginx --image=image-registry.openshift-image-registry.svc:5000/openshift/bitnami-nginx:1.26 --replicas=3
 ```
 
