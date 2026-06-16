@@ -271,3 +271,12 @@ Note
 - In case, a Pod is found defective in a Deployment, it can be easily replaced with another new Pod on the same node or on another node
   by the respective Controller
 </pre>
+
+
+## Lab - Finding more details about deployment
+```
+oc project jegan
+oc get deploy
+oc describe deploy/nginx
+```
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/aacfdae2-a575-4d24-a50e-5e9c644ec4c7" />
