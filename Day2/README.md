@@ -240,6 +240,7 @@ List the pods
 oc get pods
 oc get pod
 oc get po
+oc get pods -o wide
 ```
 
 Deleting deployment
@@ -253,6 +254,7 @@ oc delete deploy/nginx
 ```
 
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/a11d0d86-eab1-4da0-8da2-3194966f5ca0" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/9f98aa60-ae19-4577-aa1c-7c8f5cf2894d" />
 
 
 Note
