@@ -8,3 +8,82 @@ kubectl version
 oc get nodes
 ```
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/35603468-5e51-46d6-9071-e1b6f0b9899d" />
+
+
+## Info - Container Orchestration Platform Overview
+<pre>
+- In real world applications, no one uses plain docker/podman/containerd containers
+- Container platforms provides the below features out of the box
+  - in built application monitoring and healing them
+  - in built load balancing 
+  - on demand, depending user traffic to an application we can scale up/down the application instances
+  - High Availability (HA)
+  - they also provide a way to control access to your applicaiton
+    - only to internal users/applications
+    - expose your application for external use
+- examples
+  - Docker SWARM
+  - Kubernetes
+  - Rancher
+  - Red Hat Openshift
+  - AWS eks
+  - Azure aks
+  - AWS ROSA
+  - Azure ARO
+</pre>
+
+## Info - Docker SWARM
+<pre>
+- this is native Container Orchestration Platform developed by Docker Inc
+- it only supported Docker Containerized applications
+- it is free but supports only docker no other container engine or runtime
+- it is very easy to setup, learn
+- it is not production grade
+- ideal for learning, proof of concept, QA/Dev environment
+- applications will be deployed as Docker container
+- every container will get a IP
+</pre>
+
+## Info - Kubernetes
+<pre>
+- this is a container orchestration plaform developed by Google
+- this was originally called borg inside Google
+- borg was used by Google many years in mulitple complex projects internally before they decided to make it opensource
+- borg was refactored as Kubernetes improving many things
+- Kubernetes is a better borg
+- it is opensource and free
+- it supports all container engines and runtimes
+- initially, they supported Docker Engine as the default containerization tool
+- applications will be deployed as Pod
+- Pod - a group of related containers
+- all containers in a single Pod will one get a single IP
+- Pod is the smallest unit that can be deployed in Kubernetes
+- it is a command-line tool, there is no production grade webconsole
+- this is actually used in production by many companies
+- Kubernetes provides a way to extend Kubernetes API and features by defining your own Custom Resources
+  and Custom Resource Definitions
+- To manage each type of Resource, there will one type of Controller
+- The default resources supported by Kubernetes are
+  - Pod
+  - ReplicaSet
+  - Deployment
+  - StatefulSet
+  - DaemonSet
+  - Job
+  - CronJob
+  - Service
+- there are two types of machines involved in the Kubernetes Cluster
+  1. Master Node 
+     - this machine runs components that provides the Container Orchestration Features for the cluster
+     - by default, user application will run here ( however, you can override/configure to allow deploying user applications )
+     - this is where Control Plane Components will be running
+       1. API Server
+       2. etcd key/value database
+       3. Scheduler
+       4. Controller Manager(s)
+          - this components hosts many Controllers
+  2. Worker Node
+     - this machine is where user application will be deployed
+ - node are machines with dedicated linux OS, it can be Physical Server or Virtual Machine on your local datacenter, or an ec2 in public cloud
+ - we can install any Linux OS distribution into the nodes
+</pre>
