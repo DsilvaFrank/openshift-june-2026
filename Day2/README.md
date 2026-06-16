@@ -44,7 +44,7 @@ oc get nodes
 - every container will get a IP
 </pre>
 
-## Info - Kubernetes
+## Info - Kubernetes (k8s)
 <pre>
 - this is a container orchestration plaform developed by Google in Golang
 - this was originally called borg inside Google
@@ -86,10 +86,24 @@ oc get nodes
      - this machine is where user application will be deployed
  - node are machines with dedicated linux OS, it can be Physical Server or Virtual Machine on your local datacenter, or an ec2 in public cloud
  - we can install any Linux OS distribution into the nodes
+- Kubernetes allows to extend Kubernetes features ( K8s API)
+  - you can add your custom resource, custom controller, Operators, etc
+  - using thes building block one can add any new feature on top of Kubernetes
 </pre>
 
 ## Info - Red Hat Openshift
 <pre>
-- is Red Hat's distribution of Kuberentes
+- is Red Hat's distribution of Kubernetes 
 - it is developed on top of opensource Kubernetes, but this is commercial 
+- it is a superset of Kubernetes with many additional features
+- Using the K8s basic building block, Red Hat has added many additional useful features on top of K8s
+- Openshift specific features ( not supported in K8s)
+  - Route
+  - DeploymentConfig
+  - Project
+  - Build
+  - BuildConfig
+  - Webconsole
+  - User Management
+  - Internal Container Image Registry ( comes out of the box )
 </pre>
