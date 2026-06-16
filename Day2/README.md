@@ -91,6 +91,13 @@ oc get nodes
   - using thes building block one can add any new feature on top of Kubernetes
 </pre>
 
+## Info - Kubernetes High-Level Architecture
+![Kubernetes](KubernetesArchitecture2.png)
+
+## Info - Red Hat Openshift High-Level Architecture
+![Openshift](openshiftArchitecture.png)
+![Openshift](master-node.png)
+
 ## Info - Red Hat Openshift
 <pre>
 - is Red Hat's distribution of Kubernetes 
