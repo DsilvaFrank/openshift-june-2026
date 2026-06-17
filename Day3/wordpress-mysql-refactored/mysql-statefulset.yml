@@ -20,66 +20,13 @@ spec:
       - name: mysql-shared-storage
         persistentVolumeClaim:
           claimName: mysql-pvc-jegan    # Replace 'jegan' with your name
-      - name: conf
-        emptyDir: {}
 
       initContainers:
 
-      # INIT CONTAINER 1: init-server-id
-      # Computes a unique server-id from the Pod ordinal and writes it into
-      # /opt/bitnami/mariadb/conf/my.cnf by appending to it before MariaDB
-      # starts. Uses a copy of my.cnf already present in the image.
-      # mysql-0 -> server_id=1 + binary logging (primary)
-      # mysql-1 -> server_id=2 + read_only (replica)
-      # mysql-2 -> server_id=3 + read_only (replica)
-      - name: init-server-id
-        image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
-        command:
-        - bash
-        - "-c"
-        - |
-          set -ex
-          [[ ${MY_POD_NAME} =~ -([0-9]+)$ ]] || exit 1
-          ordinal=${BASH_REMATCH[1]}
-          server_id=$((ordinal + 1))
-
-          echo "Pod=${MY_POD_NAME} ordinal=${ordinal} server_id=${server_id}"
-
-          # Copy the base my.cnf from the image into the emptyDir volume,
-          # then append the replication settings for this Pod.
-          cp /opt/bitnami/mariadb/conf/my.cnf /mnt/conf/my.cnf
-
-          if [[ $ordinal -eq 0 ]]; then
-            cat >> /mnt/conf/my.cnf <<CFG
-
-          [mysqld]
-          server_id=${server_id}
-          log_bin=mariadb-bin
-          binlog_format=ROW
-          CFG
-          else
-            cat >> /mnt/conf/my.cnf <<CFG
-
-          [mysqld]
-          server_id=${server_id}
-          read_only=1
-          CFG
-          fi
-
-          echo "Final my.cnf [mysqld] section:"
-          grep -A5 "^\[mysqld\]" /mnt/conf/my.cnf | tail -10
-        env:
-        - name: MY_POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        volumeMounts:
-        - name: conf
-          mountPath: /mnt/conf
-
-      # INIT CONTAINER 2: clone-mysql
-      # Skips on mysql-0. On replicas: waits for mysql-0 and the replicator
-      # user to exist, then configures and starts replication.
+      # Skips on mysql-0 (primary needs no replication setup).
+      # On replicas: waits for mysql-0 to be up and for the replicator user
+      # to exist (created by deploy.sh after mysql-0 is Ready), then runs
+      # CHANGE MASTER TO and starts the replication thread.
       - name: clone-mysql
         image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
         command:
@@ -89,11 +36,10 @@ spec:
           set -ex
           [[ ${MY_POD_NAME} =~ -([0-9]+)$ ]] || exit 1
           ordinal=${BASH_REMATCH[1]}
-
           [[ $ordinal -eq 0 ]] && exit 0
 
           until mariadb -h mysql-0.mysql -uroot -p"${MARIADB_ROOT_PASSWORD}" -e "SELECT 1" 2>/dev/null; do
-            echo "Waiting for mysql-0 to accept connections..."
+            echo "Waiting for mysql-0..."
             sleep 3
           done
 
@@ -133,6 +79,33 @@ spec:
         image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
         imagePullPolicy: IfNotPresent
 
+        # Bitnami rewrites /opt/bitnami/mariadb/conf/my.cnf on every Pod start,
+        # so appending server-id there does not survive restarts. The only
+        # reliable injection point is DB_EXTRA_FLAGS, which run.sh passes
+        # directly to mariadbd. We wrap the entrypoint in a bash command that
+        # computes the correct server-id from MY_POD_NAME before exec-ing the
+        # real Bitnami entrypoint.
+        #   mysql-0 -> server-id=1, binary logging ON  (primary/writer)
+        #   mysql-1 -> server-id=2, read-only ON       (replica)
+        #   mysql-2 -> server-id=3, read-only ON       (replica)
+        command:
+        - bash
+        - "-c"
+        - |
+          set -ex
+          [[ ${MY_POD_NAME} =~ -([0-9]+)$ ]] || exit 1
+          ordinal=${BASH_REMATCH[1]}
+          server_id=$((ordinal + 1))
+
+          if [[ $ordinal -eq 0 ]]; then
+            export DB_EXTRA_FLAGS="--server-id=${server_id} --log-bin=mariadb-bin --binlog-format=ROW"
+          else
+            export DB_EXTRA_FLAGS="--server-id=${server_id} --read-only=1"
+          fi
+
+          echo "Pod=${MY_POD_NAME} server-id=${server_id} DB_EXTRA_FLAGS=${DB_EXTRA_FLAGS}"
+          exec /opt/bitnami/scripts/mariadb/entrypoint.sh /opt/bitnami/scripts/mariadb/run.sh
+
         ports:
         - containerPort: 3306
 
@@ -168,34 +141,24 @@ spec:
         - name: mysql-shared-storage
           mountPath: /bitnami/mariadb/data
           subPathExpr: $(MY_POD_NAME)
-        - name: conf
-          # Mounts the customised my.cnf (written by init-server-id) over
-          # the image's default my.cnf. MariaDB reads this file at startup
-          # and picks up the correct server_id for this Pod.
-          mountPath: /opt/bitnami/mariadb/conf/my.cnf
-          subPath: my.cnf
 
         env:
         - name: MY_POD_NAME
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-
         - name: MARIADB_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
               name: wordpress-login-credentials
               key: password
-
         - name: MARIADB_DATABASE
           valueFrom:
             configMapKeyRef:
               name: wordpress-cm
               key: db_name
-
         - name: MARIADB_REPLICATION_USER
           value: replicator
-
         - name: MARIADB_REPLICATION_PASSWORD
           valueFrom:
             secretKeyRef:

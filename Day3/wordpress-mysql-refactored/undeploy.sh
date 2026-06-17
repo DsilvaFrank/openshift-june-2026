@@ -8,7 +8,7 @@ echo "\nCleaning up WordPress NFS data (while Pod still has volume mounted)..."
 # Clean data BEFORE deleting the StatefulSet.
 # The wordpress-0 Pod already has the PVC mounted with the right permissions,
 # so this is more reliable than a separate cleanup Pod.
-oc exec wordpress-0 -- sh -c "rm -rf /bitnami/wordpress/* /bitnami/wordpress/.[!.]*" \
+oc exec wordpress-0 -- sh -c "rm -rf /bitnami/wordpress /bitnami/apache" \
   && echo "WordPress data cleaned." \
   || echo "Warning: WordPress data cleanup failed - clean NFS manually."
 
