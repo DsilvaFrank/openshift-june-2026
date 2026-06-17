@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-setup-cm
+  labels:
+    app: mysql
+data:
+  setup.sh: |
+    #!/bin/bash
+    # Runs as a sidecar on every pod, every boot.
+    # Determines role from pod ordinal, waits for local mysqld,
+    # then configures server-id and replication. Fully idempotent.
+    set -e
+
+    [[ "$MY_POD_NAME" =~ -([0-9]+)$ ]] || exit 1
+    ordinal=${BASH_REMATCH[1]}
+    server_id=$((ordinal + 1))
+
+    M="mariadb -h127.0.0.1 -uroot -p${MARIADB_ROOT_PASSWORD}"
+
+    echo "Pod=${MY_POD_NAME} ordinal=${ordinal} server_id=${server_id}"
+
+    # Wait for local mysqld to accept connections
+    until $M -e 'SELECT 1' &>/dev/null; do
+      echo "Waiting for local mysqld..."
+      sleep 3
+    done
+
+    echo "Local mysqld is ready. Configuring server-id=${server_id}..."
+
+    # Set unique server-id dynamically (survives Bitnami rewriting my.cnf)
+    $M -e "SET GLOBAL server_id=${server_id};"
+
+    if [[ "$ordinal" -eq 0 ]]; then
+      # PRIMARY: create replication and monitor users
+      $M -e "
+        CREATE USER IF NOT EXISTS 'replicator'@'%' IDENTIFIED BY '${MARIADB_REPLICATION_PASSWORD}';
+        GRANT REPLICATION SLAVE ON *.* TO 'replicator'@'%';
+        CREATE USER IF NOT EXISTS 'monitor'@'%' IDENTIFIED BY 'monitor';
+        GRANT SELECT, REPLICATION CLIENT ON *.* TO 'monitor'@'%';
+        FLUSH PRIVILEGES;"
+
+      # Enable binary logging dynamically if not already on
+      $M -e "SET GLOBAL log_bin=1;" 2>/dev/null || true
+
+      echo "Primary ready. Users created."
+    else
+      # REPLICA: wait for replicator user on primary, then start replication
+      until mariadb -h mysql-0.mysql -ureplicator -p"${MARIADB_REPLICATION_PASSWORD}" \
+            -e 'SELECT 1' &>/dev/null; do
+        echo "Waiting for replicator user on mysql-0..."
+        sleep 5
+      done
+
+      $M -e "
+        STOP SLAVE;
+        CHANGE MASTER TO
+          MASTER_HOST='mysql-0.mysql',
+          MASTER_USER='replicator',
+          MASTER_PASSWORD='${MARIADB_REPLICATION_PASSWORD}',
+          MASTER_PORT=3306,
+          MASTER_CONNECT_RETRY=10;
+        START SLAVE;
+        SET GLOBAL read_only=1;"
+
+      echo "Replication started."
+    fi
+
+    # Keep the sidecar running so the pod stays alive
+    exec sleep infinity

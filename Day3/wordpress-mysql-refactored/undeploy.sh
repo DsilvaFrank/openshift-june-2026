@@ -45,6 +45,7 @@ echo "\nDeleting MySQL PVC, PV and Service..."
 oc delete -f mysql-pvc.yml
 oc delete -f mysql-pv.yml
 oc delete -f mysql-svc.yml
+oc delete -f mysql-setup-cm.yml
 
 echo "\nRemoving ConfigMap and Secrets..."
 oc delete -f wordpress-cm.yml

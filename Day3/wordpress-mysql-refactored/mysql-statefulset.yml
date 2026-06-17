@@ -20,88 +20,18 @@ spec:
       - name: mysql-shared-storage
         persistentVolumeClaim:
           claimName: mysql-pvc-jegan    # Replace 'jegan' with your name
-
-      initContainers:
-      # Skips on mysql-0. On replicas: waits for mysql-0 and the replicator
-      # user to exist before the main container starts. Bitnami handles
-      # CHANGE MASTER TO automatically when MARIADB_REPLICATION_MODE=slave
-      # and MARIADB_MASTER_HOST is set, but only on first boot. The wait here
-      # ensures mysql-0 is fully initialised before replicas start.
-      - name: wait-for-primary
-        image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
-        command:
-        - bash
-        - "-c"
-        - |
-          set -ex
-          [[ ${MY_POD_NAME} =~ -([0-9]+)$ ]] || exit 1
-          ordinal=${BASH_REMATCH[1]}
-          [[ $ordinal -eq 0 ]] && exit 0
-
-          until mariadb -h mysql-0.mysql -uroot -p"${MARIADB_ROOT_PASSWORD}" -e "SELECT 1" 2>/dev/null; do
-            echo "Waiting for mysql-0..."
-            sleep 3
-          done
-
-          until mariadb -h mysql-0.mysql -ureplicator -p"${MARIADB_REPLICATION_PASSWORD}" -e "SELECT 1" 2>/dev/null; do
-            echo "Waiting for replicator user on mysql-0..."
-            sleep 5
-          done
-
-          echo "mysql-0 is ready."
-        env:
-        - name: MY_POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: MARIADB_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: wordpress-login-credentials
-              key: password
-        - name: MARIADB_REPLICATION_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: wordpress-login-credentials
-              key: replication-password
+      - name: setup-script
+        configMap:
+          name: mysql-setup-cm
+          defaultMode: 0755
 
       containers:
+
+      # Main MariaDB container. No replication config here - the setup
+      # sidecar handles everything after mysqld is ready.
       - name: mysql
         image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
         imagePullPolicy: IfNotPresent
-
-        # Use a command wrapper to:
-        # 1. Compute a unique server-id from the pod ordinal
-        # 2. Set MARIADB_REPLICATION_MODE to master (mysql-0) or slave (others)
-        # 3. Set DB_EXTRA_FLAGS with the unique server-id (appended after
-        #    Bitnami's own replication flags by mariadb_extra_flags())
-        # 4. exec the real Bitnami entrypoint
-        #
-        # MARIADB_REPLICATION_MODE triggers Bitnami to enable binary logging
-        # on master and relay log + read-only on slaves automatically.
-        # DB_EXTRA_FLAGS overrides the random server-id Bitnami would generate.
-        command:
-        - bash
-        - "-c"
-        - |
-          set -ex
-          [[ ${MY_POD_NAME} =~ -([0-9]+)$ ]] || exit 1
-          ordinal=${BASH_REMATCH[1]}
-          server_id=$((ordinal + 1))
-
-          if [[ $ordinal -eq 0 ]]; then
-            export MARIADB_REPLICATION_MODE=master
-          else
-            export MARIADB_REPLICATION_MODE=slave
-            export MARIADB_MASTER_HOST=mysql-0.mysql
-            export MARIADB_MASTER_PORT_NUMBER=3306
-          fi
-
-          # Override the random server-id Bitnami would generate
-          export DB_EXTRA_FLAGS="--server-id=${server_id}"
-
-          echo "Pod=${MY_POD_NAME} server-id=${server_id} mode=${MARIADB_REPLICATION_MODE}"
-          exec /opt/bitnami/scripts/mariadb/entrypoint.sh /opt/bitnami/scripts/mariadb/run.sh
 
         ports:
         - containerPort: 3306
@@ -161,3 +91,39 @@ spec:
             secretKeyRef:
               name: wordpress-login-credentials
               key: replication-password
+
+      # Setup sidecar: runs alongside mysqld on every pod, every boot.
+      # Determines its role from the pod ordinal, waits for local mysqld,
+      # then configures replication. Idempotent - safe to run on restart.
+      # Mirrors the pattern from the reference example exactly.
+      - name: setup
+        image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
+        imagePullPolicy: IfNotPresent
+        command:
+        - bash
+        - /scripts/setup.sh
+        env:
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-login-credentials
+              key: password
+        - name: MARIADB_REPLICATION_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-login-credentials
+              key: replication-password
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: setup-script
+          mountPath: /scripts
