@@ -355,6 +355,7 @@ exit
 ```
 oc project jegan
 oc get deploy
+oc delete svc/nginx
 oc expose deploy/nginx --type=NodePort --port=8080
 oc get services
 oc get service
@@ -371,3 +372,31 @@ curl http://192.168.100.22:31269 # Worker 2
 curl http://192.168.100.23:31269 # Worker 3
 ```
 
+## Lab - Creating an external LoadBalancer service for nginx deployment
+```
+oc project jegan
+oc get deploy
+oc delete svc/nginx
+oc expose deploy/nginx --type=LoadBalancer --port=8080
+oc get services
+oc get service
+oc get svc
+oc describe svc/nginx
+
+# Access the loadbalancer service
+curl http://<external-ip-of-loadbalancer-service>:8080
+curl http://192.168.100.50:8080
+```
+
+## Lab - Declaratively deploy nginx using yaml file
+```
+oc project jegan
+oc delete deploy/nginx
+
+oc create deploy nginx --image= image-registry.openshift-image-registry.svc:5000/openshift/bitnami-nginx:1.26 --replicas=3 --dry-run=client
+
+oc create deploy nginx --image= image-registry.openshift-image-registry.svc:5000/openshift/bitnami-nginx:1.26 --replicas=3 --dry-run=client > nginx-deploy.yml
+
+oc create -f nginx-deploy.yml --save-config=true
+oc get deploy,rs,po
+```
