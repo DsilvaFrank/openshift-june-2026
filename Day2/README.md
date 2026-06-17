@@ -306,3 +306,65 @@ oc port-forward pod/nginx-bb9bcb898-bbx2g 9090:8080
 # Terminal 2
 curl http://localhost:9090
 ```
+
+## Info - Services
+<pre>
+- Kubernetes/Openshift supports 3 types of services
+  1. ClusterIP ( Internal Service )
+  2. NodePort ( External Service )
+  3. LoadBalancer ( External Service )
+- Kubernetes/Openshift service represents a group of load-balanced pods from a single application
+</pre>
+
+## Info - ClusterIP Internal Service
+<pre>
+- this type of internal service is used by databases 
+- any application tha runs in the same cluster can access the respective pods via ClusterIP 
+- ClusterIP Service when created, it will be assigned an unique and IP Address (ClusterIP)
+</pre>
+
+## Lab - Creating an internal service for nginx deployment
+```
+oc project jegan
+oc get deploy
+oc expose deploy/nginx --type=ClusterIP --port=8080
+oc get services
+oc get service
+oc get svc
+oc describe svc/nginx
+```
+
+## Lab - Creating an internal service for nginx deployment
+```
+oc project jegan
+oc get deploy
+oc expose deploy/nginx --type=ClusterIP --port=8080
+oc get services
+oc get service
+oc get svc
+oc describe svc/nginx
+```
+
+## Lab - Creating an external service for nginx deployment
+```
+oc project jegan
+oc get deploy
+oc expose deploy/nginx --type=NodePort --port=8080
+oc get services
+oc get service
+oc get svc
+oc describe svc/nginx
+
+# Access the nodeport service
+curl http://192.168.100.11:31269 # Master 1
+curl http://192.168.100.12:31269 # Master 2
+curl http://192.168.100.13:31269 # Master 3
+
+curl http://192.168.100.21:31269 # Worker 1
+curl http://192.168.100.22:31269 # Worker 2
+curl http://192.168.100.23:31269 # Worker 3
+
+
+
+```
+
