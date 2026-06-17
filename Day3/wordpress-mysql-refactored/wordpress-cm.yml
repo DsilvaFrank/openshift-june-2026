@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wordpress-cm
+data:
+  db_name: wordpress
+  # WordPress connects to ProxySQL, not directly to MySQL.
+  # ProxySQL listens on port 6033 for MySQL-protocol connections.
+  # It routes writes to mysql-0 and reads to mysql-1, mysql-2, etc.
+  db_service_name: proxysql
+  db_service_port: "6033"

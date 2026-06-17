@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxysql
+  labels:
+    app: proxysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proxysql
+  template:
+    metadata:
+      labels:
+        app: proxysql
+    spec:
+      containers:
+      - name: proxysql
+        image: proxysql/proxysql:2.5.5
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - name: mysql
+          containerPort: 6033   # WordPress connects here
+        - name: admin
+          containerPort: 6032   # ProxySQL admin interface
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 300m
+            memory: 256Mi
+
+        readinessProbe:
+          tcpSocket:
+            port: 6033
+          initialDelaySeconds: 10
+          periodSeconds: 5
+
+        livenessProbe:
+          tcpSocket:
+            port: 6033
+          initialDelaySeconds: 20
+          periodSeconds: 10
+
+        volumeMounts:
+        - name: proxysql-config
+          # ProxySQL reads its config from this path on startup.
+          mountPath: /etc/proxysql.cnf
+          subPath: proxysql.cnf
+
+      volumes:
+      - name: proxysql-config
+        configMap:
+          name: proxysql-cm
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxysql
+  labels:
+    app: proxysql
+spec:
+  # WordPress connects to 'proxysql:6033'.
+  # ProxySQL then decides whether the query goes to mysql-0 (writer)
+  # or mysql-1/mysql-2 (readers) based on the query rules.
+  ports:
+  - name: mysql
+    port: 6033
+    targetPort: 6033
+    protocol: TCP
+  - name: admin
+    port: 6032
+    targetPort: 6032
+    protocol: TCP
+  selector:
+    app: proxysql
+  type: ClusterIP

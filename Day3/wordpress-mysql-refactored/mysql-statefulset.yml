@@ -1,0 +1,182 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  serviceName: mysql
+  replicas: 3
+  podManagementPolicy: OrderedReady
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      # Single shared PVC mounted on every Pod.
+      # Each Pod gets its own subfolder via subPath in volumeMounts below.
+      # NFS creates the subfolder on first write - no manual mkdir needed.
+      volumes:
+      - name: mysql-shared-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc-jegan    # Replace 'jegan' with your name
+      - name: conf
+        emptyDir: {}
+
+      initContainers:
+
+      # INIT CONTAINER 1: init-mysql
+      # Writes replication config before MariaDB starts.
+      # mysql-0 gets binary logging (primary/writer).
+      # mysql-1, mysql-2 get read-only mode and unique server-id.
+      - name: init-mysql
+        image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
+        command:
+        - bash
+        - "-c"
+        - |
+          set -ex
+          [[ $(hostname) =~ -([0-9]+)$ ]] || exit 1
+          ordinal=${BASH_REMATCH[1]}
+
+          if [[ $ordinal -eq 0 ]]; then
+            cat > /etc/mysql/conf.d/replication.cnf <<EOF
+          [mysqld]
+          server-id=1
+          log-bin=mariadb-bin
+          binlog-format=ROW
+          EOF
+          else
+            cat > /etc/mysql/conf.d/replication.cnf <<EOF
+          [mysqld]
+          server-id=$((ordinal + 1))
+          read-only=1
+          EOF
+          fi
+        volumeMounts:
+        - name: conf
+          mountPath: /etc/mysql/conf.d
+
+      # INIT CONTAINER 2: clone-mysql
+      # Skips on mysql-0 (primary needs no replication setup).
+      # On replicas: waits for mysql-0, then configures and starts replication.
+      - name: clone-mysql
+        image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
+        command:
+        - bash
+        - "-c"
+        - |
+          set -ex
+          [[ $(hostname) =~ -([0-9]+)$ ]] || exit 1
+          ordinal=${BASH_REMATCH[1]}
+
+          [[ $ordinal -eq 0 ]] && exit 0
+
+          until mysql -h mysql-0.mysql -uroot -p"${MARIADB_ROOT_PASSWORD}" -e "SELECT 1"; do
+            echo "Waiting for mysql-0..."
+            sleep 3
+          done
+
+          mysql -h mysql-0.mysql -uroot -p"${MARIADB_ROOT_PASSWORD}" <<EOF
+          STOP SLAVE;
+          CHANGE MASTER TO
+            MASTER_HOST='mysql-0.mysql',
+            MASTER_USER='replicator',
+            MASTER_PASSWORD='${MARIADB_REPLICATION_PASSWORD}',
+            MASTER_CONNECT_RETRY=10;
+          START SLAVE;
+          EOF
+        env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-login-credentials
+              key: password
+        - name: MARIADB_REPLICATION_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-login-credentials
+              key: replication-password
+        volumeMounts:
+        - name: conf
+          mountPath: /etc/mysql/conf.d
+
+      containers:
+      - name: mysql
+        image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - containerPort: 3306
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        readinessProbe:
+          exec:
+            command:
+            - bash
+            - "-c"
+            - "mysql -uroot -p\"${MARIADB_ROOT_PASSWORD}\" -e 'SELECT 1'"
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+
+        livenessProbe:
+          exec:
+            command:
+            - bash
+            - "-c"
+            - "mysqladmin -uroot -p\"${MARIADB_ROOT_PASSWORD}\" ping"
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+
+        volumeMounts:
+        - name: mysql-shared-storage
+          mountPath: /bitnami/mariadb/data
+          # subPath: mysql-0, mysql-1, or mysql-2 depending on the Pod.
+          # Kubernetes does NOT support dynamic subPath values like $(POD_NAME)
+          # directly in the subPath field. The workaround is to use an
+          # environment variable via subPathExpr, which was added in k8s 1.17.
+          # subPathExpr resolves $(MY_POD_NAME) at runtime using the env var
+          # defined below, so mysql-0 gets subPath mysql-0, mysql-1 gets
+          # subPath mysql-1, and so on - all from one shared PVC.
+          subPathExpr: $(MY_POD_NAME)
+        - name: conf
+          mountPath: /etc/mysql/conf.d
+
+        env:
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              # Kubernetes Downward API: injects the Pod's own name as an
+              # environment variable. mysql-0 sees MY_POD_NAME=mysql-0,
+              # mysql-1 sees MY_POD_NAME=mysql-1, etc.
+              # subPathExpr above uses this to resolve the subfolder name.
+              fieldPath: metadata.name
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-login-credentials
+              key: password
+        - name: MARIADB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: wordpress-cm
+              key: db_name
+        - name: MARIADB_REPLICATION_USER
+          value: replicator
+        - name: MARIADB_REPLICATION_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-login-credentials
+              key: replication-password

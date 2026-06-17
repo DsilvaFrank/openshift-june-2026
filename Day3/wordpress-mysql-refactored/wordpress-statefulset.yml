@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  serviceName: wordpress
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      volumes:
+      - name: wordpress-storage
+        persistentVolumeClaim:
+          claimName: wordpress-pvc-jegan  # Replace 'jegan' with your name
+
+      initContainers:
+      # Wait for ProxySQL to be ready before WordPress starts.
+      # ProxySQL itself waits for no one - it will queue or reject connections
+      # to MySQL backends that aren't ready yet. So waiting for ProxySQL port
+      # 6033 to open is sufficient.
+      - name: wait-for-proxysql
+        image: busybox:1.36
+        command:
+        - sh
+        - "-c"
+        - |
+          until nc -z proxysql 6033; do
+            echo "Waiting for ProxySQL..."
+            sleep 3
+          done
+          echo "ProxySQL is ready."
+
+      containers:
+      - name: wordpress
+        image: image-registry.openshift-image-registry.svc:5000/openshift/wordpress:1.0
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - containerPort: 8080
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        readinessProbe:
+          httpGet:
+            path: /wp-login.php
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+
+        livenessProbe:
+          httpGet:
+            path: /wp-login.php
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 20
+          timeoutSeconds: 5
+
+        env:
+        - name: WORDPRESS_DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-login-credentials
+              key: username
+        - name: WORDPRESS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-login-credentials
+              key: username
+        - name: WORDPRESS_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-login-credentials
+              key: password
+        - name: WORDPRESS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-login-credentials
+              key: password
+        - name: WORDPRESS_DATABASE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: wordpress-cm
+              key: db_name
+        - name: WORDPRESS_DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: wordpress-cm
+              key: db_service_name
+        - name: WORDPRESS_DATABASE_PORT_NUMBER
+          valueFrom:
+            configMapKeyRef:
+              name: wordpress-cm
+              key: db_service_port
+
+        volumeMounts:
+        - name: wordpress-storage
+          mountPath: /bitnami/wordpress
