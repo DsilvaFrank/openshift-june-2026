@@ -5,9 +5,9 @@
 oc project jegan
 oc delete deploy/nginx
 
-oc create deploy nginx --image= image-registry.openshift-image-registry.svc:5000/openshift/bitnami-nginx:1.26 --replicas=3 --dry-run=client
+oc create deploy nginx --image= image-registry.openshift-image-registry.svc:5000/openshift/bitnami-nginx:1.26 --replicas=3 -o yaml --dry-run=client
 
-oc create deploy nginx --image= image-registry.openshift-image-registry.svc:5000/openshift/bitnami-nginx:1.26 --replicas=3 --dry-run=client > nginx-deploy.yml
+oc create deploy nginx --image= image-registry.openshift-image-registry.svc:5000/openshift/bitnami-nginx:1.26 --replicas=3 -o yaml --dry-run=client > nginx-deploy.yml
 
 oc create -f nginx-deploy.yml --save-config=true
 oc get deploy,rs,po
