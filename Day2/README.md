@@ -343,6 +343,12 @@ oc get services
 oc get service
 oc get svc
 oc describe svc/nginx
+
+# Access the ClusterIP service
+oc create deploy hello --image=docker.io/tektutor/spring-ms:1.0
+oc rsh deploy/hello
+curl http://nginx:8080
+exit
 ```
 
 ## Lab - Creating an external service for nginx deployment
