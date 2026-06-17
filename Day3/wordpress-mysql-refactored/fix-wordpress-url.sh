@@ -16,7 +16,7 @@ CORRECT_URL="http://${HOSTNAME}"
 
 echo "\nFixing WordPress site URL to: ${CORRECT_URL}"
 
-oc exec mysql-0 -- mysql -uroot -proot@123 wordpress <<SQL
+oc exec mysql-0 -- mariadb -uroot -proot@123 wordpress <<SQL
 UPDATE wp_options SET option_value = '${CORRECT_URL}' WHERE option_name = 'siteurl';
 UPDATE wp_options SET option_value = '${CORRECT_URL}' WHERE option_name = 'home';
 SELECT option_name, option_value FROM wp_options WHERE option_name IN ('siteurl','home');

@@ -21,7 +21,7 @@ echo "\nCreating replication and monitor users on mysql-0..."
 # replicator: used by mysql-1, mysql-2 to stream the binary log from mysql-0.
 # monitor:    used by ProxySQL to health-check all three MySQL backends.
 #             ProxySQL defaults to monitor/monitor when not explicitly configured.
-oc exec mysql-0 -- mysql -uroot -proot@123 <<SQL
+oc exec mysql-0 -- mariadb -uroot -proot@123 <<SQL
 CREATE USER IF NOT EXISTS 'replicator'@'%' IDENTIFIED BY 'repl@123';
 GRANT REPLICATION SLAVE ON *.* TO 'replicator'@'%';
 
@@ -52,4 +52,4 @@ echo "\nUseful commands:"
 echo "  Scale WordPress:  oc scale statefulset wordpress --replicas=3"
 echo "  Scale MySQL:      oc scale statefulset mysql --replicas=3"
 echo "  Check pods:       oc get pods"
-echo "  Check replication: oc exec mysql-1 -- mysql -uroot -proot@123 -e 'SHOW SLAVE STATUS\G'"
+echo "  Check replication: oc exec mysql-1 -- mariadb -uroot -proot@123 -e 'SHOW SLAVE STATUS\G'"
