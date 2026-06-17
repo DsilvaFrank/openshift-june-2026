@@ -38,6 +38,9 @@
        - Oracle VirtualBox - Free ( Windows, Linux & Mac )
 </pre>
 
+## Info - Hypervisor High-Level Architecture
+![Hypervisor](HypervisorHighLevelArchitecture.png)
+
 ## Info - Containerization Overview
 <pre>
 - it is a light-weight application virtualization technology
