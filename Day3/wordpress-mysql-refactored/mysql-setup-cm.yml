@@ -40,10 +40,16 @@ data:
         GRANT SELECT, REPLICATION CLIENT ON *.* TO 'monitor'@'%';
         FLUSH PRIVILEGES;"
 
-      # Enable binary logging dynamically if not already on
-      $M -e "SET GLOBAL log_bin=1;" 2>/dev/null || true
-
       echo "Primary ready. Users created."
+
+      # Verify binary logging status
+      log_bin=$($M -e "SHOW VARIABLES LIKE 'log_bin';" | grep log_bin | awk '{print $2}')
+      echo "log_bin=${log_bin}"
+      if [[ "$log_bin" != "ON" ]]; then
+        echo "WARNING: Binary logging is OFF. Replication will not work."
+        echo "DB_EXTRA_FLAGS must include --log-bin at startup."
+        echo "Current DB_EXTRA_FLAGS=${DB_EXTRA_FLAGS}"
+      fi
     else
       # REPLICA: wait for replicator user on primary, then start replication
       until mariadb -h mysql-0.mysql -ureplicator -p"${MARIADB_REPLICATION_PASSWORD}" \

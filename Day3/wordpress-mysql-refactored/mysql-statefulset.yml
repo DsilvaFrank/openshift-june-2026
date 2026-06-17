@@ -27,11 +27,37 @@ spec:
 
       containers:
 
-      # Main MariaDB container. No replication config here - the setup
-      # sidecar handles everything after mysqld is ready.
+      # Main MariaDB container.
+      # Uses a command wrapper to compute server-id from the pod ordinal
+      # and set DB_EXTRA_FLAGS before exec-ing the Bitnami entrypoint.
+      # DB_EXTRA_FLAGS is appended to mariadbd startup flags by run.sh,
+      # making this the only reliable way to pass --log-bin with Bitnami
+      # since my.cnf is rewritten on every pod start.
+      #
+      # mysql-0 -> server-id=1, --log-bin (primary/writer)
+      # mysql-1 -> server-id=2, --read-only (replica)
+      # mysql-2 -> server-id=3, --read-only (replica)
       - name: mysql
         image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
         imagePullPolicy: IfNotPresent
+
+        command:
+        - bash
+        - "-c"
+        - |
+          set -ex
+          [[ ${MY_POD_NAME} =~ -([0-9]+)$ ]] || exit 1
+          ordinal=${BASH_REMATCH[1]}
+          server_id=$((ordinal + 1))
+
+          if [[ $ordinal -eq 0 ]]; then
+            export DB_EXTRA_FLAGS="--server-id=${server_id} --log-bin=mariadb-bin --binlog-format=ROW"
+          else
+            export DB_EXTRA_FLAGS="--server-id=${server_id} --read-only=1"
+          fi
+
+          echo "Pod=${MY_POD_NAME} server-id=${server_id} DB_EXTRA_FLAGS=${DB_EXTRA_FLAGS}"
+          exec /opt/bitnami/scripts/mariadb/entrypoint.sh /opt/bitnami/scripts/mariadb/run.sh
 
         ports:
         - containerPort: 3306
@@ -93,9 +119,8 @@ spec:
               key: replication-password
 
       # Setup sidecar: runs alongside mysqld on every pod, every boot.
-      # Determines its role from the pod ordinal, waits for local mysqld,
-      # then configures replication. Idempotent - safe to run on restart.
-      # Mirrors the pattern from the reference example exactly.
+      # Waits for local mysqld, sets server-id, creates users on primary,
+      # configures replication on replicas. Fully idempotent.
       - name: setup
         image: image-registry.openshift-image-registry.svc:5000/openshift/mariadb:1.0
         imagePullPolicy: IfNotPresent
