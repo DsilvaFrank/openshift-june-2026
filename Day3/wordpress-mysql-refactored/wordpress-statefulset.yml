@@ -106,6 +106,17 @@ spec:
             configMapKeyRef:
               name: wordpress-cm
               key: db_service_port
+        - name: WORDPRESS_BLOG_URL
+          # Bitnami WordPress image uses this to set siteurl and home in
+          # wp_options during first install. Without this, it falls back to
+          # WORDPRESS_DATABASE_HOST ('proxysql') as the site URL, which
+          # causes wp-admin to redirect to http://proxysql/wp-admin/...
+          # Must include the port since WordPress serves on 8080 internally,
+          # but the Route strips the port so use http:// with no port.
+          valueFrom:
+            configMapKeyRef:
+              name: wordpress-cm
+              key: blog_hostname
 
         volumeMounts:
         - name: wordpress-storage

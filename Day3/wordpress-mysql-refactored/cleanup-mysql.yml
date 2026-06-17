@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-cleanup
+spec:
+  restartPolicy: Never
+  volumes:
+  - name: mysql-data
+    persistentVolumeClaim:
+      claimName: mysql-pvc-jegan   # Replace 'jegan' with your name
+  containers:
+  - name: cleanup
+    image: busybox:1.36
+    # Deletes all MySQL data including the per-Pod subfolders:
+    #   /mnt/mysql/mysql-0/
+    #   /mnt/mysql/mysql-1/
+    #   /mnt/mysql/mysql-2/
+    command:
+    - sh
+    - "-c"
+    - |
+      echo "Cleaning up MySQL NFS data..."
+      rm -rf /mnt/mysql/*
+      rm -rf /mnt/mysql/.[!.]*
+      echo "Done."
+    volumeMounts:
+    - name: mysql-data
+      mountPath: /mnt/mysql

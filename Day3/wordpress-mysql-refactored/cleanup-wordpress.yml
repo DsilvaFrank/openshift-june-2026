@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wordpress-cleanup
+spec:
+  # restartPolicy: Never ensures the Pod exits after the command finishes
+  # and does not restart. Combined with oc wait --for=delete, the script
+  # blocks until the cleanup is complete before deleting the PVC.
+  restartPolicy: Never
+  volumes:
+  - name: wp-data
+    persistentVolumeClaim:
+      claimName: wordpress-pvc-jegan   # Replace 'jegan' with your name
+  containers:
+  - name: cleanup
+    image: busybox:1.36
+    # Deletes all files and hidden files under the mount point.
+    # The mount point directory itself (/mnt/wordpress) is preserved
+    # since it is owned by the volume system, not the container.
+    command:
+    - sh
+    - "-c"
+    - |
+      echo "Cleaning up WordPress NFS data..."
+      rm -rf /mnt/wordpress/*
+      rm -rf /mnt/wordpress/.[!.]*
+      echo "Done."
+    volumeMounts:
+    - name: wp-data
+      mountPath: /mnt/wordpress

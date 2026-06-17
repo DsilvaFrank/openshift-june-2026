@@ -9,3 +9,9 @@ data:
   # It routes writes to mysql-0 and reads to mysql-1, mysql-2, etc.
   db_service_name: proxysql
   db_service_port: "6033"
+  # The public hostname OpenShift assigns to the WordPress Route.
+  # Format: wordpress-<namespace>.apps.<cluster-domain>
+  # Run: oc get route wordpress -o jsonpath='{.spec.host}'
+  # then update this value and re-run: oc apply -f wordpress-cm.yml
+  # followed by: oc rollout restart statefulset/wordpress
+  blog_hostname: wordpress-jegan.apps.ocp4.palmeto.org
