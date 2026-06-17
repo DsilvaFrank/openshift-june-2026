@@ -4,14 +4,10 @@ metadata:
   name: wordpress-cm
 data:
   db_name: wordpress
-  # WordPress connects to ProxySQL, not directly to MySQL.
-  # ProxySQL listens on port 6033 for MySQL-protocol connections.
-  # It routes writes to mysql-0 and reads to mysql-1, mysql-2, etc.
   db_service_name: proxysql
   db_service_port: "6033"
-  # The public hostname OpenShift assigns to the WordPress Route.
-  # Format: wordpress-<namespace>.apps.<cluster-domain>
-  # Run: oc get route wordpress -o jsonpath='{.spec.host}'
-  # then update this value and re-run: oc apply -f wordpress-cm.yml
-  # followed by: oc rollout restart statefulset/wordpress
-  blog_hostname: wordpress-jegan.apps.ocp4.palmeto.org
+  # Public hostname of the OpenShift Route.
+  # Bitnami WordPress image reads WORDPRESS_HOSTNAME from this value
+  # and writes it as siteurl and home in wp_options during first install.
+  # If you redeploy to a different cluster, update this and re-apply.
+  site_hostname: wordpress-jegan.apps.ocp4.palmeto.org
