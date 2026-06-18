@@ -58,3 +58,30 @@ We need to stree the pod with more traffic
 ```
 ab -k -n 200000 -c 1000 https://nginx-jegan.apps.ocp4.palmeto.org/
 ```
+
+## Lab - Preferred Node Affinity
+```
+cd ~/openshift-june-2026
+git pull
+cd Day4/node-affinity
+cat preferred-node-affinity.yml
+oc delete project jegan
+oc new-project jegan
+
+# Scenario - No nodes has disk=ssd label
+oc label node worker03.ocp4.palmeto.org disk=ssd
+oc get pods -o wide
+oc delete -f preferred-node-affinity.yml
+oc apply -f preferred-node-affinity.yml
+oc get pods -o wide
+oc label node worker03.ocp4.palmeto.org disk-
+oc get nodes --show-labels
+oc get pods -o wide
+oc delete -f preferred-node-affinity.yml
+
+# Scenario - node matches the criteria
+oc apply -f required-node-affinity.yml
+oc get pods -o wide
+oc label node worker03.ocp4.palmeto.org disk=ssd
+oc get pods -o wide
+```
