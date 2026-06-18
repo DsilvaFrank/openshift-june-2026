@@ -10,6 +10,19 @@
 - StatefulSet doesn't support any inbuilt mechanism for synchronizing data, hence it must be taken care by us
 </pre>
 
+## Info - Openshift S2I
+<pre>
+- In Kubernetes, we can only deploy application using container images
+- In Openshift, we can deploy applicaiton using container images and from github(or any other version control) url i.e from source code
+- This feature in Openshift is called S2I ( Source to Image )
+- Openshift supports many different types of strategies
+  1. Docker 
+  2. Source
+  3. Custom
+  4. Pipeline(Jenkins/TekTon)
+  5. Binary(S2I Binary)
+</pre>
+
 ## Lab - Deploying our custom spring-boot appliction into Openshift using S2I docker strategy
 ```
 oc new-app --name=hello-microservice https://github.com/tektutor/openshift-june-2026.git --context-dir=Day2/simple-springboot-microservice --strategy=docker
