@@ -10,7 +10,7 @@ public class GreetingController {
 
     @GetMapping("/")
     public String hello() {
-        return "Hello Microservice v1.0";
+        return "Hello Microservice v2.0";
     }
 
 }
