@@ -1,5 +1,20 @@
 # Day 3
 
+## Info - Pod Network
+<pre>
+- At the time of installing Openshift, we can choose the network fabric like Calico, Weave, Flannel, etc
+- Depending on which fabric we have installed in Kubernetes/Openshift, it would allocate a range of IP Addresses for each node
+- As we know, each node in Openshift by default supports upto 250 Pods 
+- hence, in case 10.20.0.0/16 is IP range we choose or the network fabric chose, it will be divided into Pod subnets
+  For example
+  - For Master 1 ( 10.20.1.0/24 )
+  - For Master 2 ( 10.20.2.0/24 )
+  - For Master 3 ( 10.20.3.0/24 )
+  - For Worker 1 ( 10.20.10.0/24 )
+  - For Worker 2 ( 10.20.11.0/24 )
+  - For Worker 3 ( 10.20.12.0/24 )
+</pre>
+
 ## Lab - Declaratively deploy nginx using yaml file
 ```
 oc project jegan
