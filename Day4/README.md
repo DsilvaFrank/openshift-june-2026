@@ -136,3 +136,31 @@ curl -k https://nginx-jegan.apps.ocp4.palmeto.org
      - HAProxy Load Balancer
      - Traefik Load Balancer
 </pre>
+
+Let's proceed with the hands-on exercise
+```
+cd ~/openshift-june-2026
+git pull
+cd Day4/ingress
+oc apply -f hello-deploy.yml
+oc apply -f nginx-deploy.yml
+
+oc apply -f hello-svc.yml
+oc apply -f nginx-svc.yml
+
+oc apply -f ingress.yml
+
+oc get pods -o wide -l app=hello
+oc get pods -o wide -l app=nginx
+
+oc get svc
+
+oc describe svc/hello
+oc describe svc/nginx
+
+oc get ingress
+oc describe ingress/tektutor
+
+curl http://tektutor.apps.ocp4.palmeto.org/nginx
+curl http://tektutor.apps.ocp4.palmeto.org/hello
+```
