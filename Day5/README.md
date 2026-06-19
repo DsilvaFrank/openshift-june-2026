@@ -8,6 +8,48 @@ chmod 700 get_helm.sh
 ./get_helm.sh
 ```
 
+## Info - Helm Package Manager
+<pre>
+- Helm is a package manager for deploying/undeploying upgrading/downgrading your application in Kubernetes/Openshift
+- In case of Openshift, it is pre-integrated in Openshift webconsole
+</pre>  
+
+## Lab - Packaging wordpress and mysql as Helm Chart and deploying into Openshift
+```
+# In case, you haven't cloned this training repository already, you can do now
+cd ~
+git clone https://github.com/tektutor/openshift-june-2026.git
+cd Day5/helm-chart
+helm version
+helm create wordpress
+cd wordpress/templates
+rm *
+cd ../..
+cp scripts/* wordpress/templates
+cp values.yaml wordpress
+tree wordpress
+
+# Create a wordpress Helm chart package
+helm package wordpress/
+ls -l
+
+oc delete project jegan
+oc new-project jegan
+
+helm install wordpress wordpress-0.1.0.tgz
+
+# List all helm charts you deployed into openshift
+helm list
+oc get deploy,pods,svc,route,pv,pvc
+
+# Head over to your Openshift project --> Topology and click on the up arrow(Route url)
+
+
+# Once you are done with this exercise, you may undeploy by running the below command
+helm uninstall wordpress
+oc get deploy,rs,pods,svc,route,pv,pvc
+```
+
 ## Info - Openshift S2I Docker Strategy
 <pre>
 - You will have to provide your version control ur, for example - https://github.com/tektutor/spring-ms.git
