@@ -5,6 +5,11 @@
 https://catalog.redhat.com/en/software/containers/explore
 </pre>
 
+## Info - You can find other Red Hat Openshift compatible images here
+<pre>
+https://catalog.redhat.com/en/search?searchType=Containers
+</pre>  
+
 ## Info - What happens internally in Openshift when we deploy an application
 ```
 oc create deploy nginx --image=docker.io/bitnamilegay/nginx:latest --replicas=3
