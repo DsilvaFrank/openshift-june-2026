@@ -809,3 +809,9 @@ exit
 - OpenShift Virtualization (EX316) - Running VMs alongside containers
 - OpenShift Data Foundation (EX370) - Managing cluster storage/ODF
 </pre>
+
+
+## Lab - Creating a pdf out of this repo as a reference material
+```
+bazel run //src:md2pdf -- --source https://github.com/tektutor/openshift-june-2026.git --folders Day1 Day2 Day3 Day4 Day5 --output $PWD/training-material.pdf
+```
